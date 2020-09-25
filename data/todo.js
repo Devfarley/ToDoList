@@ -69,7 +69,7 @@ const upsertTodos = (id, TodoObj) => {
             const db = client.db(db_name);
             const collection = db.collection(col_name);
             collection.findOneAndUpdate({_id: new ObjectId(id)},
-            {$set: {...TodoObj}},
+            {$push: {...TodoObj}},
             (err, result) => {
                 assert.equal(err, null);
                 readTodoById(result.value._id)
@@ -80,7 +80,22 @@ const upsertTodos = (id, TodoObj) => {
     });
     return iou
 };
+const deleteTodo= (id, index) => {
+    const iou = new Promise((resolve, reject) => {
+        MongoClient.connect(url, options,(err, client) =>{
+            assert.equal(err, null);
 
+            const db = client.db(db_name);
+            const collection = db.collection(col_name);
+            collection.updateOne({_id: new ObjectId(id)},{ $pull: {"tasks": [index]}}, (err, result) => {
+                assert.equal(err, null)
+                resolve(result.value);
+                client.close();
+            });
+        });
+    });
+    return iou  
+};
 // Delete a Product, using the 'delete' Mongo Function
 const deleteTodos= (id) => {
     const iou = new Promise((resolve, reject) => {
@@ -105,5 +120,6 @@ module.exports = {
     readTodos,
     createTodos,
     upsertTodos,
-    deleteTodos
+    deleteTodos,
+    deleteTodo
 }
